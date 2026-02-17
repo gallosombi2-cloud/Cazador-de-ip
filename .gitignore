@@ -1,5 +1,4 @@
-Auditoria_WiFi/
-*.dat
-*.png
+*.cap
+*.csv
+*.netxml
 *.log
-.DS_Store
