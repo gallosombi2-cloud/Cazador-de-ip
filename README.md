@@ -1,12 +1,12 @@
-# 📡 WiFi Expert Suite
-Herramienta visual para Kali Linux enfocada en auditorías de resiliencia WiFi y análisis de tráfico pasivo.
+# 📡 WiFi Expert Suite GUI v6.0
+Herramienta visual avanzada para auditorías de seguridad WiFi en Kali Linux.
 
-## 🚀 Funciones
-- **Monitor de Salud:** Gráficos de latencia en tiempo real.
-- **Sniffer Pasivo:** Encuentra la IP del router sin estar conectado.
-- **Interfaz Gráfica:** Fácil de usar en Kali Linux.
+## 💎 Características Gráficas
+- **Menús Dinámicos:** Navegación simple mediante ventanas de Zenity.
+- **Ataque Permanente:** Bloqueo total de dispositivos con botón de detención.
+- **Handshake Automático:** Captura de credenciales cifradas con un clic.
 
-## 🛠️ Instalación
+## 🛠 Instalación Rápida
 ```bash
 chmod +x setup.sh && ./setup.sh
 sudo ./wifi_expert_suite.sh
